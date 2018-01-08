@@ -13,6 +13,7 @@ import hmvv.gui.mutationlist.tablemodels.MutationList;
 import hmvv.gui.mutationlist.tablemodels.SampleTableModel;
 import hmvv.model.Annotation;
 import hmvv.model.Coordinate;
+import hmvv.model.GeneAnnotation;
 import hmvv.model.Mutation;
 
 public class MutationReportGenerator{
@@ -74,9 +75,12 @@ public class MutationReportGenerator{
 			Coordinate coordinate = mutation.getCoordinate();
 			Annotation annotation = DatabaseCommands.getAnnotation(coordinate);
 			String curation = annotation.getCuration();
+			GeneAnnotation geneAnnotation = DatabaseCommands.getGeneAnnotation(gene);
+			String geneCuration = geneAnnotation.getCuration();
 			
 			report.append("Mutation Info: " + mutationText + "\n");
-			report.append("Curation Note: " + curation + "\n" + "\n");
+			report.append("Curation Note: " + curation + "\n");
+			report.append("Gene Note: " + geneCuration + "\n" + "\n");
 		}
 
 		return report.toString();
