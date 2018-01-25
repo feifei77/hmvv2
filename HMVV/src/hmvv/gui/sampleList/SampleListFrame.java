@@ -3,6 +3,9 @@ package hmvv.gui.sampleList;
 import java.awt.Component;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -195,7 +198,7 @@ public class SampleListFrame extends JFrame {
 		mutationSearchButton.setFont(GUICommonTools.TAHOMA_BOLD_12);
 
 		loadIGVButton = new JButton("Load IGV");
-		loadIGVButton.setToolTipText("Load the selected sample into IGV. IGV needs to be already opened");
+		loadIGVButton.setToolTipText("Load the selected sample into IGV and copy the mutation list information to clipboard. IGV needs to be already opened");
 		loadIGVButton.setFont(GUICommonTools.TAHOMA_BOLD_14);
 		
 		lblChooseAnAssay = new JLabel("Choose an assay");
@@ -557,20 +560,33 @@ public class SampleListFrame extends JFrame {
 		});
 	}
 
-	private void loadIGV() throws Exception{
+	private void loadIGV() throws Exception{			
 		int[] selectedView = table.getSelectedRows();
 		int[] selectedModel = new int[selectedView.length];
 		if(selectedView.length == 0){
 			JOptionPane.showMessageDialog(this, "Please select/highlight at least one sample");
 			return;
 		}
+		
 		for(int i = 0; i < selectedView.length; i++){
 			selectedModel[i] = table.convertRowIndexToModel(selectedView[i]);
+			String ID = getValueNotNull(selectedModel[i], 0);
 			String runID = getValueNotNull(selectedModel[i], 9);
 			String sampleID = getValueNotNull(selectedModel[i], 10);
 			String callerID = getValueNotNull(selectedModel[i], 12);
 			String instrument = getValueNotNull(selectedModel[i], 2);
 			String httpFile = null;
+			
+			String copyString = "";	
+			ArrayList<Mutation> mutations = DatabaseCommands.getMutationDataByID(Integer.parseInt(ID));
+			for(Mutation m : mutations){
+				copyString = copyString + m.getGene() + "\t" + m.getChr() + "\t" + m.getPos() + "\n";
+			}
+									
+			StringSelection stringselection = new StringSelection(copyString); 
+			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+			clipboard.setContents(stringselection, stringselection);
+			
 			if(instrument.equals("pgm")){
 				httpFile = SSHConnection.findPGMSample(runID, sampleID, callerID);
 			}else if(instrument.equals("proton")){
