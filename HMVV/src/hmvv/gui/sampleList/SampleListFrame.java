@@ -13,6 +13,12 @@ import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.io.File;
+import java.io.FilePermission;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.security.AccessController;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -567,7 +573,7 @@ public class SampleListFrame extends JFrame {
 			JOptionPane.showMessageDialog(this, "Please select/highlight at least one sample");
 			return;
 		}
-		
+		String batchString = "genome hg19\n";
 		for(int i = 0; i < selectedView.length; i++){
 			selectedModel[i] = table.convertRowIndexToModel(selectedView[i]);
 			String ID = getValueNotNull(selectedModel[i], 0);
@@ -577,13 +583,13 @@ public class SampleListFrame extends JFrame {
 			String instrument = getValueNotNull(selectedModel[i], 2);
 			String httpFile = null;
 			
-			String copyString = "";	
+			
 			ArrayList<Mutation> mutations = DatabaseCommands.getMutationDataByID(Integer.parseInt(ID));
 			for(Mutation m : mutations){
-				copyString = copyString + m.getGene() + "\t" + m.getChr() + "\t" + m.getPos() + "\n";
+				batchString = batchString + "goto " + m.getChr() + ":" + m.getPos() + "-" + m.getPos() + "\nsort position\ncollapse\n";
 			}
 									
-			StringSelection stringselection = new StringSelection(copyString); 
+			StringSelection stringselection = new StringSelection(batchString); 
 			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 			clipboard.setContents(stringselection, stringselection);
 			
@@ -601,6 +607,14 @@ public class SampleListFrame extends JFrame {
 			if(!response.equals("")){
 				JOptionPane.showMessageDialog(this, response);
 			}
+		}
+		try{
+			File batchFile = new File("batch.txt");
+			FileWriter fw = new FileWriter(batchFile);
+			fw.write(batchString);
+			fw.close();
+		} catch (IOException iox) {
+			iox.printStackTrace();
 		}
 	}
 
